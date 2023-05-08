@@ -1,13 +1,18 @@
 defmodule Helpdesk.Support.Resources.Ticket do
   # turn module into resource
-  use Ash.Resource, data_layer: Ash.DataLayer.Ets
+  use Ash.Resource, data_layer: AshPostgres.DataLayer
+
+  postgres do
+    table "tickets"
+    repo Helpdesk.Repo
+  end
 
   actions do
     # Add set of simple actions. Customize later
     defaults [:create, :read, :update, :destroy]
 
     create :open do
-      accept [:subject]
+      accept [:subject, :representative_id]
     end
 
     update :close do
@@ -35,13 +40,15 @@ defmodule Helpdesk.Support.Resources.Ticket do
     end
 
     attribute :status, :atom do
-      constraints [one_of: [:open, :closed]]
+      constraints one_of: [:open, :closed]
       default :open
       allow_nil? false
     end
   end
 
   relationships do
-    belongs_to: representative, Helpdesk.Support.Resources.Representative
+    belongs_to :representative, Helpdesk.Support.Resources.Representative do
+      attribute_writable? true
+    end
   end
 end
